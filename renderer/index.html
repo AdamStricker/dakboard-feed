@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';">
+  <title>A Peek Inside the Pages</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>A Peek Inside the Pages</h1>
+    <button id="pushBtn" class="btn-push">Push Live</button>
+  </header>
+
+  <div class="toolbar">
+    <button id="shuffleBtn" class="btn-secondary">Shuffle</button>
+    <button id="addBtn" class="btn-primary">+ Add Item</button>
+    <span id="itemCount" class="item-count"></span>
+  </div>
+
+  <main>
+    <div id="feedList" class="feed-list"></div>
+  </main>
+
+  <!-- Add Item Modal -->
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h2>Add Item</h2>
+      <div class="field">
+        <label for="quoteInput">Quote</label>
+        <textarea id="quoteInput" placeholder="Enter the quote text…" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label for="bookTitleInput">Book Title</label>
+        <input id="bookTitleInput" type="text" placeholder="e.g. The Song of Achilles">
+      </div>
+      <div class="field">
+        <label for="authorInput">Author</label>
+        <input id="authorInput" type="text" placeholder="e.g. Madeline Miller">
+      </div>
+      <div class="modal-actions">
+        <button id="cancelBtn" class="btn-secondary">Cancel</button>
+        <button id="saveBtn" class="btn-primary" disabled>Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
