@@ -270,6 +270,49 @@ button:disabled {
   to   { transform: translateX(0);    opacity: 1; }
 }
 
+/* ── Context Menu ── */
+.context-menu {
+  position: fixed;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  z-index: 150;
+  min-width: 130px;
+}
+
+.context-menu.hidden {
+  display: none;
+}
+
+.context-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  color: #1e1b18;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.context-item:hover {
+  background: #f3f4f6;
+}
+
+.context-item-danger {
+  color: #dc2626;
+}
+
+.context-item-danger:hover {
+  background: #fef2f2;
+}
+
 /* ── Error state ── */
 .error-state {
   display: flex;

@@ -129,10 +129,14 @@ ipcMain.handle('git:push', () => {
       'git add quoteFeed.rss && git commit -m "Update RSS feed" && git push',
       { cwd: __dirname },
       (err, stdout, stderr) => {
-        if (err) {
-          resolve({ success: false, error: stderr || err.message })
-        } else {
+        if (!err) {
           resolve({ success: true, output: stdout })
+          return
+        }
+        if ((stdout + stderr).match(/nothing to commit|nothing added to commit/i)) {
+          resolve({ success: true, output: 'Already up to date — nothing new to push.' })
+        } else {
+          resolve({ success: false, error: stderr || stdout || err.message })
         }
       }
     )

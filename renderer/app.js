@@ -1,5 +1,6 @@
 let currentItems = []
 let sortable = null
+let editingItemId = null
 
 function escapeHtml(str) {
   if (!str) return ''
@@ -83,22 +84,60 @@ async function loadItems() {
   }
 }
 
-// ── Shuffle ──
-document.getElementById('shuffleBtn').addEventListener('click', async () => {
-  for (let i = currentItems.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [currentItems[i], currentItems[j]] = [currentItems[j], currentItems[i]]
-  }
+// ── Context Menu ──
+const contextMenu = document.getElementById('contextMenu')
+let contextTargetId = null
+
+function hideContextMenu() {
+  contextMenu.classList.add('hidden')
+  contextTargetId = null
+}
+
+document.getElementById('feedList').addEventListener('contextmenu', e => {
+  const row = e.target.closest('.item-row')
+  if (!row) return
+  e.preventDefault()
+  contextTargetId = row.dataset.id
+
+  // Position near cursor, keeping it on-screen
+  const menuW = 140, menuH = 44
+  const x = Math.min(e.clientX, window.innerWidth - menuW - 8)
+  const y = Math.min(e.clientY, window.innerHeight - menuH - 8)
+  contextMenu.style.left = `${x}px`
+  contextMenu.style.top = `${y}px`
+  contextMenu.classList.remove('hidden')
+})
+
+document.addEventListener('click', e => {
+  if (!contextMenu.contains(e.target)) hideContextMenu()
+})
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideContextMenu()
+})
+
+document.getElementById('contextEdit').addEventListener('click', () => {
+  const item = currentItems.find(i => i.id === contextTargetId)
+  hideContextMenu()
+  if (item) openModal(item)
+})
+
+document.getElementById('contextDelete').addEventListener('click', async () => {
+  const id = contextTargetId
+  hideContextMenu()
+  currentItems = currentItems.filter(i => i.id !== id)
   renderList()
   try {
     await window.api.saveItems(currentItems)
+    showToast('Item deleted')
   } catch (err) {
     showToast(err.message, 'error')
   }
 })
 
-// ── Add Item Modal ──
+// ── Add / Edit Modal ──
 const modal = document.getElementById('modal')
+const modalTitle = modal.querySelector('h2')
 const quoteInput = document.getElementById('quoteInput')
 const bookTitleInput = document.getElementById('bookTitleInput')
 const authorInput = document.getElementById('authorInput')
@@ -115,34 +154,77 @@ function validateModal() {
   el.addEventListener('input', validateModal)
 )
 
-document.getElementById('addBtn').addEventListener('click', () => {
-  quoteInput.value = ''
-  bookTitleInput.value = ''
-  authorInput.value = ''
-  saveBtn.disabled = true
+function openModal(item = null) {
+  editingItemId = item ? item.id : null
+  modalTitle.textContent = item ? 'Edit Item' : 'Add Item'
+  quoteInput.value = item ? item.title : ''
+  bookTitleInput.value = item ? item.bookTitle : ''
+  authorInput.value = item ? item.author : ''
+  validateModal()
   modal.classList.remove('hidden')
   quoteInput.focus()
-})
+}
 
-document.getElementById('cancelBtn').addEventListener('click', () => {
+function closeModal() {
   modal.classList.add('hidden')
-})
+  editingItemId = null
+}
+
+document.getElementById('addBtn').addEventListener('click', () => openModal())
+
+document.getElementById('cancelBtn').addEventListener('click', closeModal)
 
 modal.addEventListener('click', e => {
-  if (e.target === modal) modal.classList.add('hidden')
+  if (e.target === modal) closeModal()
 })
 
 saveBtn.addEventListener('click', async () => {
-  const item = {
-    title: quoteInput.value.trim(),
-    bookTitle: bookTitleInput.value.trim(),
-    author: authorInput.value.trim()
+  const title = quoteInput.value.trim()
+  const bookTitle = bookTitleInput.value.trim()
+  const author = authorInput.value.trim()
+  closeModal()
+
+  if (editingItemId !== null) {
+    // Edit in-place
+    const idx = currentItems.findIndex(i => i.id === editingItemId)
+    if (idx !== -1) {
+      currentItems[idx] = {
+        ...currentItems[idx],
+        title,
+        bookTitle,
+        author,
+        description: `"${bookTitle}" by ${author}`
+      }
+    }
+    editingItemId = null
+    try {
+      await window.api.saveItems(currentItems)
+      renderList()
+      showToast('Item updated')
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
+  } else {
+    // Add new
+    try {
+      currentItems = await window.api.addItem({ title, bookTitle, author })
+      renderList()
+      showToast('Item added')
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
   }
-  modal.classList.add('hidden')
+})
+
+// ── Shuffle ──
+document.getElementById('shuffleBtn').addEventListener('click', async () => {
+  for (let i = currentItems.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentItems[i], currentItems[j]] = [currentItems[j], currentItems[i]]
+  }
+  renderList()
   try {
-    currentItems = await window.api.addItem(item)
-    renderList()
-    showToast('Item added')
+    await window.api.saveItems(currentItems)
   } catch (err) {
     showToast(err.message, 'error')
   }
